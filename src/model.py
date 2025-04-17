@@ -19,5 +19,4 @@ async def predict_insurance_labels(full_text: str, threshold: float = 0.7, top_k
     result = await loop.run_in_executor(
         None, lambda: classifier(full_text, candidate_labels=candidate_labels, multi_label=True, backsize=10)
     )
-
     return await extract_labels(result, threshold=threshold, top_k=top_k)
