@@ -1,0 +1,13 @@
+preprocess:
+  data_file: None
+  input_dir: "data/input"
+  output_dir: "data/output"
+
+model_params:
+  batch_size: 16
+  model_name: "valhalla/distilbart-mnli-12-1"
+  model_task: "zero-shot-classification"
+  model_device: 0
+  predict_threshold: 0.7
+  top_predict: 3
+
