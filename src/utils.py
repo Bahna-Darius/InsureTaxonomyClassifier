@@ -1,5 +1,9 @@
 from pydantic import BaseModel
+from datetime import date
+from src.config import settings
 from typing import List
+import pandas as pd
+import os
 
 
 class CompanyData(BaseModel):
@@ -78,3 +82,22 @@ candidate_labels = [
     "Non-Profit Management", "Arts Services", "Sports Management Services", "Fitness Coaching",
     "Health Promotion Services", "Physical Therapy Services", "Occupational Health Services"
 ]
+
+
+def save_predictions_file(data_file: pd.DataFrame):
+    """
+    Save the DataFrame with predictions to data/output/<timestamp>_predict.csv
+    Return the full path of the written file.
+    """
+
+    out_dir = settings.preprocess.output_dir
+    os.makedirs(out_dir, exist_ok=True)
+
+    today = date.today().isoformat()
+    filename = f"{today}_predict.csv"
+    full_path = os.path.join(out_dir, filename)
+
+    data_file.to_csv(full_path, index=False)
+
+    return full_path
+
