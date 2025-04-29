@@ -13,16 +13,26 @@ classifier = pipeline(
 )
 
 
-async def extract_labels(result, threshold: float = 0.7, top_k: int = 3) -> List[str]:
-    selected = [label for label, score in zip(result['labels'], result['scores']) if score > threshold]
-    if not selected:
-        selected = [result['labels'][0]]
-    return selected[:top_k]
+def _run_classification(texts: List[str], threshold: float, top_k: int):
+    results = classifier(texts, candidate_labels=candidate_labels, multi_label=True)
+    all_labels = []
+    for r in results:
+        labels = [lab for lab, sc in zip(r["labels"], r["scores"]) if sc > threshold]
+        if not labels:
+            labels = [r["labels"][0]]
+        all_labels.append(labels[:top_k])
+    return all_labels
 
 
-async def predict_insurance_labels(full_text: str, threshold: float = 0.7, top_k: int = 3) -> List[str]:
+async def predict_batch(
+    texts: List[str],
+    threshold: float = settings.model_params.predict_threshold,
+    top_k: int  = settings.model_params.top_predict
+) -> List[List[str]]:
+
     loop = asyncio.get_running_loop()
-    result = await loop.run_in_executor(
-        None, lambda: classifier(full_text, candidate_labels=candidate_labels, multi_label=True, backsize=10)
+
+    return await loop.run_in_executor(
+        None,
+        lambda: _run_classification(texts, threshold, top_k)
     )
-    return await extract_labels(result, threshold=threshold, top_k=top_k)
