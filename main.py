@@ -1,8 +1,10 @@
 from fastapi import FastAPI, APIRouter
 from src.api import router as prediction_router
+from src.config import settings
 
 app = FastAPI(
-    title="Insurance Company Classifier API"
+    title="Insurance Company Classifier API",
+    description=f"Loaded with model={settings.model_params.model_name}, batch_size={settings.model_params.batch_size}"
 )
 
 api_router = APIRouter()
