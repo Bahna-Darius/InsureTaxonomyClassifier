@@ -2,9 +2,15 @@ import asyncio
 from typing import List
 from transformers import pipeline
 from src.utils import candidate_labels
+from src.config import settings
 
 
-classifier = pipeline("zero-shot-classification", model="valhalla/distilbart-mnli-12-1", device=0)
+classifier = pipeline(
+    settings.model_params.model_task,
+    model=settings.model_params.model_name,
+    device=settings.model_params.model_device,
+    batch_size=settings.model_params.batch_size
+)
 
 
 async def extract_labels(result, threshold: float = 0.7, top_k: int = 3) -> List[str]:
