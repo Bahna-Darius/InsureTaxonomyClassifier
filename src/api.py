@@ -3,7 +3,7 @@ from aiohttp.abc import HTTPException
 from fastapi import APIRouter, File, UploadFile, BackgroundTasks
 from src.utils import CompanyData, save_predictions_file
 from src.preprocessing import preprocessing_company_data
-from src.model import predict_insurance_labels
+from src.model import predict_batch
 from src.config import settings
 import asyncio
 
@@ -15,7 +15,7 @@ router = APIRouter()
 async def predict_company(data: CompanyData):
     df_data = pd.DataFrame([data.dict()])
     data_preprocessing = await preprocessing_company_data(data=df_data)
-    predict_taxonomy = await predict_insurance_labels(data_preprocessing)
+    predict_taxonomy = await predict_batch(data_preprocessing)
 
     return {
         "insurance_label": predict_taxonomy,
@@ -26,7 +26,6 @@ async def predict_company(data: CompanyData):
         },
     }
 
-
 @router.post("/predict_file", status_code=200)
 async def predict_file(
         background_tasks: BackgroundTasks,
@@ -36,34 +35,34 @@ async def predict_file(
     try:
         df = pd.read_csv(file.file)
     except Exception as e:
-        raise HTTPException(400, f"Could not read CSV: {e}")
+        raise HTTPException(status_code=400, detail=f"Could not read CSV: {e}")
 
-    df_clean = await preprocessing_company_data(data=df)
+    df_clean = await preprocessing_company_data(df)
 
-    # Run predictions in batches:
-    async def run_and_save():
+    def run_and_save(df_input: pd.DataFrame):
         batch_size = settings.model_params.batch_size
-        preds = []
-        # Loop in batches:
-        for i in range(0, len(df_clean), batch_size):
-            batch = df_clean[i : i + batch_size]
-            loop = asyncio.get_running_loop()
-            result = await loop.run_in_executor(
-                None,
-                lambda b=batch: predict_insurance_labels(b)
-            )
-            preds.extend(await result)
-        print(f"\nData predicted is: {preds}\n")
-        df_clean['insurance_label'] = preds
-        save_predictions_file(df_clean)
+        all_preds = []
+        texts = df_input["full_text"].tolist()
 
-    background_tasks.add_task(run_and_save)
+        for i in range(0, len(texts), batch_size):
+            batch_texts = texts[i : i + batch_size]
+            batch_labels = asyncio.run(
+                predict_batch(
+                    batch_texts,
+                    threshold=settings.model_params.predict_threshold,
+                    top_k=settings.model_params.top_predict
+                )
+            )
+            all_preds.extend(batch_labels)
+
+        df_input["insurance_label"] = all_preds
+        save_predictions_file(df_input)
+
+    background_tasks.add_task(run_and_save, df_clean)
 
     return {
         "success": True,
         "message": "File received. Predictions will be saved in background.",
         "output_dir": settings.preprocess.output_dir,
     }
-
-
 

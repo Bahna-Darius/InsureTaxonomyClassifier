@@ -43,8 +43,8 @@ async def preprocessing_company_data(data: pd.DataFrame) -> pd.DataFrame:
     data['full_text'] = data['full_text'].apply(lambda x: re.sub(r'[^\w\s]', '', x))
 
     data.drop(columns=['description', 'business_tags', 'sector', 'category', 'niche', 'extra_info'], inplace=True)
-    result = str(data)
+    # result = str(data)
+    # result = [[data]]
 
-    return result
-
+    return data
 
