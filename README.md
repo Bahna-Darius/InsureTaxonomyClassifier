@@ -196,7 +196,7 @@ The system classifies companies into insurance categories including but not limi
 
 ## 📄 License
 
-This project is distributed under a <a href="https://github.com/Bahna-Darius/InsureTaxonomyClassifier/blob/main/LICENSE.md" target="_blank">MIT License</a>. See the LICENSE file for details.
+This project is distributed under a <a href="https://github.com/Bahna-Darius/InsureTaxonomyClassifier/blob/main/LICENSE.md" target="_blank">Apache License 2.0</a>. See the LICENSE file for details.
 
 ## 👤 Author
 
