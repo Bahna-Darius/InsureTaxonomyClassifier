@@ -15,7 +15,12 @@ router = APIRouter()
 async def predict_company(data: CompanyData):
     df_data = pd.DataFrame([data.dict()])
     data_preprocessing = await preprocessing_company_data(data=df_data)
-    predict_taxonomy = await predict_batch(data_preprocessing)
+    texts = data_preprocessing["full_text"].tolist()
+    predict_taxonomy = await predict_batch(
+        texts,
+        threshold=settings.model_params.predict_threshold,
+        top_k=settings.model_params.top_predict
+    )
 
     return {
         "insurance_label": predict_taxonomy,
